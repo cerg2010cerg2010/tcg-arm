@@ -28,16 +28,17 @@
 #define TAG "tcg-arm"
 #include "android_log_helper.h"
 
-bool initialized = false;
-const char *cpu_model = NULL;
 
 #define N_CPUS 2
-CPUState *local_cpus[N_CPUS];
-pthread_mutex_t local_cpu_lock[2];
+static CPUState *local_cpus[N_CPUS];
+static pthread_mutex_t local_cpu_lock[2];
 
 __attribute__((visibility("default")))
 int init_tcg_arm(void)
 {
+    static bool initialized = false;
+
+    const char *cpu_model = NULL;
     CPUArchState *env;
     char **target_environ, **wrk;
     int i;
@@ -85,6 +86,7 @@ int init_tcg_arm(void)
     tcg_prologue_init(&tcg_ctx);
 #endif
 
+    /* Do not count executed instructions */
     use_icount = 0;
 
     current_cpu = NULL;
@@ -162,11 +164,18 @@ void exec(
 
     pre_cpu_exec(cpu);
 
+    /* Scan to get the count of NEON instructions */
     icount = guess_icount(cpu);
     if (unlikely(icount == 0)) {
         return;
     }
-    cflags = icount & CF_COUNT_MASK;
+
+    /* Limit to the maximum block size */
+    if (icount > CF_COUNT_MASK) 
+        icount = CF_COUNT_MASK;
+
+    /* Set the compilation flags */
+    cflags = CF_COUNT_MASK & icount;
     tb = tb_find_fast(cpu,  &last_tb, tb_exit, cflags);
     
     do {
@@ -211,7 +220,12 @@ void exec(
             if (unlikely(icount == 0)) {
                 break;
             }
-            cflags = icount & CF_COUNT_MASK;
+
+            /* Limit to the maximum block size */
+            if (icount > CF_COUNT_MASK) 
+                icount = CF_COUNT_MASK;
+
+            cflags = CF_COUNT_MASK & icount;
             tb = tb_find_fast(cpu,  &last_tb, tb_exit, cflags);
         }
     } while (tb);

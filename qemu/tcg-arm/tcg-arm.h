@@ -9,7 +9,4 @@ void exec(
     uint32_t *fpexc,
     int dump_reg);
 
-inline int lock_cpu(void);
-inline void unlock_cpu(int cpuid);
-
 #endif /* __TCG_ARM_H__ */

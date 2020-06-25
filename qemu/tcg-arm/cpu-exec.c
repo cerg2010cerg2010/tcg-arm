@@ -369,27 +369,8 @@ static inline int is_thumb2_neon(CPUARMState *env, target_ulong pc, int sctlr_b,
     return 0;
 }
 
-/* extracted from disas_thumb2_insn() */
-static inline int is_thumb_neon(CPUARMState *env, target_ulong pc, int sctlr_b, uint16_t insn)
-{
-    int handle_insn = 0;
-
-    switch (insn >> 12) {
-    case 14:
-        if (insn & (1 << 11)) {
-            // if (disas_thumb2_insn(env, s, insn))
-            handle_insn = is_thumb2_neon(env, pc, sctlr_b, insn);
-        }
-    case 15:
-        // if (disas_thumb2_insn(env, s, insn))
-        handle_insn = is_thumb2_neon(env, pc, sctlr_b, insn);
-    }
-
-    return handle_insn;
-}
-
 /* count the number of consecutive NEON instructions */
-int neon_icount(CPUState *cpu, target_ulong pc, uint32_t flags)
+static int neon_icount(CPUState *cpu, target_ulong pc, uint32_t flags)
 {
     CPUArchState *env = (CPUArchState *)cpu->env_ptr;
     uint32_t cpsr;
@@ -403,44 +384,41 @@ int neon_icount(CPUState *cpu, target_ulong pc, uint32_t flags)
 
     if (!thumb) {
         do {
-            int handle_insn;
-            uint32_t insn;
+            uint32_t insn = arm_ldl_code(env, pc, sctlr_b);
+            int handle_insn = is_arm_neon(insn);
 
-            insn = arm_ldl_code(env, pc, sctlr_b);
-            handle_insn = is_arm_neon(insn);
+            if (!handle_insn) {
+                break;
+            }
 
-            if (handle_insn) {
+            pc += 4;
+            icount++;
+        } while (1);
+    } else {
+        do {
+            uint16_t insn = arm_lduw_code(env, pc, sctlr_b);
+            // LOGE("%s: insn = 0x%X", __func__, insn & 0xFFFF);
+
+            /* Check if it could be a thumb neon instruction */
+            if (((insn >> 12) == 14 && (insn & (1 << 11)) != 0) ||
+                    (insn >> 12) == 15) {
+
+                /* Possibly dealing with a thumb2 neon instruction */
+                int handle_insn = is_thumb2_neon(env, pc + 2, sctlr_b, insn);
+
+                /* If not a thumb2 neon instruction, stop counting */
+                if (!handle_insn) {
+                    break;
+                }
+
+                /* Instruction is a thumb2 neon instruction - count it */
                 pc += 4;
                 icount++;
-                continue;
             } else {
                 break;
             }
         } while (1);
-    } else {
-
-        // do {
-        //     int handle_insn = 0;
-        //     uint16_t insn;
-
-        //     insn = arm_lduw_code(env, pc, sctlr_b);
-        //     pc += 2;
-
-        //     LOGE("%s: insn = 0x%X", __func__, insn & 0xFFFF);
-
-        //     handle_insn = is_thumb_neon(env, pc, sctlr_b, insn);
-
-        //     if (handle_insn) {
-        //         pc += 2;
-        //         icount++;
-        //         continue;
-        //     } else {
-        //         break;
-        //     }
-        // } while (1);
         // LOGE("neon_icount() thumb: icount = %d\n", icount);
-
-        icount = 1;
     }
 
     if (icount == 0) {
