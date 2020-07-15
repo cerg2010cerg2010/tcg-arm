@@ -1,7 +1,7 @@
 include $(CLEAR_VARS)
 
 LOCAL_CFLAGS :=
-LOCAL_C_INCLUDES := $(LOCAL_PATH)
+LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/../glib/glib $(LOCAL_PATH)/../glib/android $(LOCAL_PATH)/../glib
 qemu_src_files :=
 qemu_src_files_exclude :=
 
@@ -191,7 +191,6 @@ LOCAL_CFLAGS += -mcpu=cortex-a9 -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d1
 
 LOCAL_CFLAGS += \
 	-std=gnu99 \
-	-Wno-psabi \
 	-O3 \
 	-fpic \
 	-ffunction-sections \
@@ -217,7 +216,7 @@ LOCAL_CFLAGS += -fvisibility=hidden
 # 	-O0
 # LOCAL_STRIP_MODULE := keep_symbols
 
-LOCAL_SHARED_LIBRARIES:= libz libcutils liblog
+LOCAL_SHARED_LIBRARIES:= libz libcutils_static liblog_static
 LOCAL_STATIC_LIBRARIES:= libglib-2.0 libgthread-2.0 libgobject-2.0 libgmodule-2.0
 LOCAL_MODULE    := libtcg_arm
 

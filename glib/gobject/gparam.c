@@ -53,7 +53,7 @@
 
 /* --- defines --- */
 #define PARAM_FLOATING_FLAG                     0x2
-#define	G_PARAM_USER_MASK			(~0 << G_PARAM_USER_SHIFT)
+#define	G_PARAM_USER_MASK			(~0u << G_PARAM_USER_SHIFT)
 #define PSPEC_APPLIES_TO_VALUE(pspec, value)	(G_TYPE_CHECK_VALUE_TYPE ((value), G_PARAM_SPEC_VALUE_TYPE (pspec)))
 #define	G_SLOCK(mutex)				g_static_mutex_lock (mutex)
 #define	G_SUNLOCK(mutex)			g_static_mutex_unlock (mutex)

@@ -7,7 +7,7 @@
 
 typedef struct fd_t {
 	int fd;
-	char * filepath;
+	const char * filepath;
 	int res;
 } fd_t;
 

@@ -80,6 +80,8 @@ int get_fd(const char * filepath) {
 	return fd;
 }
 
+int create_thread_get_fd(const char * filepath);
+
 int android_open(const char *path, int flags) {
 	int fd;
 	fd = create_thread_get_fd(path);
@@ -90,6 +92,8 @@ int android_openm(const char *path, int flags, mode_t mode) {
 	return android_open(path, flags);
 }
 //
+
+int create_thread_close_fd(int fd);
 
 int android_close(int fd) {
 	int res = -1;
