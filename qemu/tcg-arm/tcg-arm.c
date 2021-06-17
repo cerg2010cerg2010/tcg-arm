@@ -1,3 +1,4 @@
+#include "qemu/compiler.h"
 #include "qemu/osdep.h"
 // #include "qemu-version.h"
 #include <sys/syscall.h>
@@ -162,7 +163,10 @@ void exec(
     pre_cpu_exec(cpu);
 
     icount = guess_icount(cpu);
-    cflags = CF_COUNT_MASK & icount;
+    if (unlikely(icount == 0)) {
+        return;
+    }
+    cflags = icount & CF_COUNT_MASK;
     tb = tb_find_fast(cpu,  &last_tb, tb_exit, cflags);
     
     do {
@@ -204,7 +208,10 @@ void exec(
         if (tb != NULL) {
             last_tb = prev_tb;
             icount = guess_icount(cpu);
-            cflags = CF_COUNT_MASK & icount;
+            if (unlikely(icount == 0)) {
+                break;
+            }
+            cflags = icount & CF_COUNT_MASK;
             tb = tb_find_fast(cpu,  &last_tb, tb_exit, cflags);
         }
     } while (tb);

@@ -172,7 +172,7 @@ TranslationBlock *tb_from_cache(CPUArchState *env)
     CPUState *cpu = ENV_GET_CPU(env);
     TranslationBlock *tb;
     target_ulong cs_base, pc;
-    int flags;
+    uint32_t flags;
 
     /* we record a subset of the CPU state. It will
        always be the same before a given translated block
@@ -445,7 +445,7 @@ int neon_icount(CPUState *cpu, target_ulong pc, uint32_t flags)
 
     if (icount == 0) {
       LOGE("neon_icount() oops icount = %d\n", icount); 
-      icount = 1;
+      // icount = 1;
     }
 
     return icount;
